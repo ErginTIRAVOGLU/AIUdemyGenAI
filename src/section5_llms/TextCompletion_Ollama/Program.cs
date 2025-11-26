@@ -1,22 +1,12 @@
-﻿using Microsoft.Extensions.AI;
-using Microsoft.Extensions.Configuration;
-using OpenAI;
-using System.ClientModel;
+﻿
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.Extensions.AI;
+using OllamaSharp;
 
-IConfigurationRoot configuration = new ConfigurationBuilder()
-    .AddUserSecrets<Program>()
-    .Build();
+IChatClient client = new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.2");
 
-var credential = new ApiKeyCredential(configuration["GitHubModels:Token"] ?? throw new InvalidOperationException("GitHub Models token not found in configuration."));
-var options = new OpenAIClientOptions()
-{
-    Endpoint = new Uri("https://models.github.ai/inference")
-};
-var model="openai/gpt-5-mini"; //"deepseek/DeepSeek-V3-0324"
-IChatClient client = new OpenAIClient(credential, options)
-    .GetChatClient(model).AsIChatClient();
 
 #region Basic Text Completion
 /*
@@ -30,17 +20,25 @@ Console.WriteLine($"Tokens used: in={response.Usage.InputTokenCount}, out={respo
 */
 #endregion
 
-#region Streaming Text Completion
+
+#region Sentiment Analysis
+
 /*
-string prompt = "Explain the theory of relativity in max 2000 words.";
-Console.WriteLine($"user >>> {prompt}");
-var responseStream = client.GetStreamingResponseAsync(prompt);
-await foreach (var message in responseStream)
-{
-    Console.Write(message);
-}
+var analysisPrompt = """
+You will analyze the sentiment of the following product reviews.
+Each line is its own review. Output the sentiment of each review in a bulleted list as 'positive', 'negative', or 'neutral' then provide a generate sentiment of all reviews.
+
+I bought this product and it's amazing. I love it!
+This product is terrible. I hate it.
+I'm not sure about this product. It's okay.
+I found this product based on the other reviews. It worked for a bit, and the
+""";
+Console.WriteLine($"user >>> {analysisPrompt}");
+ChatResponse analysisResponse = await client.GetResponseAsync(analysisPrompt);
+Console.WriteLine($"assistant >>> \n {analysisResponse}");
 */
 #endregion
+
 
 #region Classification
 /*
@@ -60,39 +58,6 @@ Classify the following sentences into categories:
 Console.WriteLine($"user >>> {classificationPrompt}");
 ChatResponse classificationResponse = await client.GetResponseAsync(classificationPrompt);
 Console.WriteLine($"assistant >>> \n {classificationResponse}");
-*/
-#endregion
-
-#region Summarization
-/*
-var summaryPrompt = """
-Summarize the following blog in 1 concise sentence:
-
-"Microservices architecture is increasingly popular for building complex, scalable and maintainable applications. By breaking down applications into smaller, independent services, development teams can work more efficiently and deploy updates without affecting the entire system. This approach also allows for better fault isolation, as issues in one service do not necessarily impact others. Additionally, microservices can be developed using different technologies, enabling teams to choose the best tools for each specific task. However, managing a microservices architecture can be complex, requiring robust monitoring and orchestration solutions to ensure seamless communication between services."
-
-""";
-
-Console.WriteLine($"user >>> {summaryPrompt}");
-ChatResponse summaryResponse = await client.GetResponseAsync(summaryPrompt);
-Console.WriteLine($"assistant >>> \n {summaryResponse}");
-*/
-#endregion
-
-#region Sentiment Analysis
-
-/*
-var analysisPrompt = """
-You will analyze the sentiment of the following product reviews.
-Each line is its own review. Output the sentiment of each review in a bulleted list as 'positive', 'negative', or 'neutral' then provide a generate sentiment of all reviews.
-
-I bought this product and it's amazing. I love it!
-This product is terrible. I hate it.
-I'm not sure about this product. It's okay.
-I found this product based on the other reviews. It worked for a bit, and the
-""";
-Console.WriteLine($"user >>> {analysisPrompt}");
-ChatResponse analysisResponse = await client.GetResponseAsync(analysisPrompt);
-Console.WriteLine($"assistant >>> \n {analysisResponse}");
 */
 #endregion
 
@@ -159,8 +124,8 @@ enum CarListingType
 #endregion
 
 #region  ChatpApp
-/*
 
+/*
 List<ChatMessage> chatHistory = new()
 {
     new ChatMessage(ChatRole.System, """        
