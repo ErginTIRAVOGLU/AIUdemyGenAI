@@ -14,12 +14,12 @@ var options = new OpenAIClientOptions()
 };
 
 // create a chat client
-IChatClient client2 =
+IChatClient client =
     new ChatClientBuilder(new OpenAIClient(credential, options).GetChatClient("openai/gpt-5-mini").AsIChatClient())
     .UseFunctionInvocation()
     .Build();
 
-IChatClient client =
+IChatClient client3 =
     new ChatClientBuilder(new OllamaApiClient(new Uri("http://localhost:11434"), "llama3.2"))
     .UseFunctionInvocation()
     .Build();
