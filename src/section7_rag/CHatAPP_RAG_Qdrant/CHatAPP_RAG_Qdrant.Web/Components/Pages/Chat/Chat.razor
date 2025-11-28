@@ -56,8 +56,7 @@
         messages.Add(new(ChatRole.System, SystemPrompt));
         chatOptions.Tools = [
             AIFunctionFactory.Create(LoadDocumentsAsync),
-            AIFunctionFactory.Create(SearchAsync),
-            AIFunctionFactory.Create(GetTemperatureAsync)
+            AIFunctionFactory.Create(SearchAsync)
         ];
     }
 
@@ -128,14 +127,6 @@
         var results = await Search.SearchAsync(searchPhrase, filenameFilter, maxResults: 5);
         return results.Select(result =>
             $"<result filename=\"{result.DocumentId}\">{result.Text}</result>");
-    }
-
-    [Description("Get Current Temperature of Weather")]
-    private async Task<float?> GetTemperatureAsync([Description("The temperature of location")] string location)
-    {
-        // Simulate an asynchronous operation to get the temperature
-        await Task.Delay(500); // Simulating network delay
-        return new Random().Next(minValue: -20, maxValue: 40); // Return a random temperature
     }
 
     public void Dispose()
