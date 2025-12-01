@@ -11,6 +11,7 @@ builder.AddServiceDefaults();
 builder.AddNpgsqlDbContext<CatalogDbContext>(connectionName: "catalogdb");
 
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<ProductAIService>();
 
 
 #region AI Client Configuration
@@ -22,10 +23,19 @@ builder.Services.AddScoped<ProductService>();
         Endpoint = new Uri("https://models.github.ai/inference")
     };
 
-    IChatClient chatClient = 
-        new OpenAIClient(credential, options).GetChatClient("openai/gpt-5-mini").AsIChatClient();
+    var openAiClient= new OpenAIClient(credential, options);
+    
+    var chatClient = 
+        openAiClient.GetChatClient("openai/gpt-4o-mini").AsIChatClient();
+    
+    var embeddingGenerator = 
+        openAiClient.GetEmbeddingClient("openai/text-embedding-3-small").AsIEmbeddingGenerator();
 
     builder.Services.AddChatClient(chatClient);
+    builder.Services.AddEmbeddingGenerator(embeddingGenerator);
+
+    builder.AddQdrantClient("vectordb");
+    builder.Services.AddQdrantCollection<ulong, ProductVector>("product-vectors");
 
 #endregion
 
